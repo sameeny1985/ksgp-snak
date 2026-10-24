@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: snake-ksgp
+    env: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: CALLBACK_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        value: shapyaar@google.com
