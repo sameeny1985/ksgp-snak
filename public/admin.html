@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin | Snake KSGP</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin: 16px 0 24px;
+    }
+    .summary-card {
+      background: rgba(0,230,118,0.1);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid rgba(0,230,118,0.25);
+    }
+    .summary-card .val {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #00e676;
+    }
+    .summary-card .lbl {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="max-width: 1000px;">
+    <div class="lang-bar">
+      <label for="lang-select">Language:</label>
+      <select id="lang-select">
+        <option value="en">English</option>
+        <option value="fa">فارسی</option>
+        <option value="nl">Nederlands</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+      </select>
+    </div>
+
+    <div class="card" style="margin-top: 8px;">
+      <h1>🐍 Snake <span class="token">KSGP</span> — Admin Panel</h1>
+      <p id="admin-status">Loading...</p>
+      <a href="/" class="btn secondary" style="margin-top: 12px;">← Back to game</a>
+      <a href="/user.html" class="btn secondary" style="margin-top: 12px; margin-left: 8px;">My Panel</a>
+
+      <div id="summary-wrap" class="hidden">
+        <h3 style="margin-top: 24px;">📊 Summary Reports</h3>
+        <div class="summary-grid" id="summary-grid"></div>
+      </div>
+
+      <div id="table-wrap" class="hidden" style="overflow-x: auto; margin-top: 12px;">
+        <h3>👥 All Users</h3>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>ksgp</th>
+              <th>Level</th>
+              <th>Highest</th>
+              <th>Total Score</th>
+              <th>Games</th>
+              <th>Saved?</th>
+              <th>Last Played</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const lang = localStorage.getItem('snake_ksgp_lang') || 'en';
+    document.getElementById('lang-select').value = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+    if (lang === 'fa') document.body.style.fontFamily = "'Vazirmatn', Tahoma, sans-serif";
+
+    document.getElementById('lang-select').addEventListener('change', (e) => {
+      localStorage.setItem('snake_ksgp_lang', e.target.value);
+      location.reload();
+    });
+
+    async function loadAdmin() {
+      try {
+        const me = await fetch('/api/me', { credentials: 'include' }).then(r => r.json());
+        if (!me.authenticated || !me.user.isAdmin) {
+          document.getElementById('admin-status').textContent = 'Access denied. Admin only (shapyaar@gmail.com).';
+          return;
+        }
+        document.getElementById('admin-status').textContent = 'Welcome ' + me.user.name + ' (' + me.user.email + ')';
+
+        const data = await fetch('/api/admin/users', { credentials: 'include' }).then(r => r.json());
+
+        const s = data.summary || {};
+        const grid = document.getElementById('summary-grid');
+        grid.innerHTML = 
+          '<div class="summary-card"><div class="val">' + (s.totalUsers || 0) + '</div><div class="lbl">Total Users</div></div>' +
+          '<div class="summary-card"><div class="val">' + (s.totalKsgpDistributed || 0) + '</div><div class="lbl">Total ksgp</div></div>' +
+          '<div class="summary-card"><div class="val">' + (s.totalGamesPlayed || 0) + '</div><div class="lbl">Games Played</div></div>' +
+          '<div class="summary-card"><div class="val">' + (s.totalScoreAll || 0) + '</div><div class="lbl">Total Score</div></div>' +
+          '<div class="summary-card"><div class="val">' + (s.usersWithSave || 0) + '</div><div class="lbl">Active Saves</div></div>' +
+          '<div class="summary-card"><div class="val">' + (s.maxLevelReached || 1) + '</div><div class="lbl">Max Level Reached</div></div>';
+        document.getElementById('summary-wrap').classList.remove('hidden');
+
+        const tbody = document.getElementById('users-body');
+        tbody.innerHTML = '';
+        (data.users || []).forEach(function(u) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = 
+            '<td>' + u.name + '</td>' +
+            '<td>' + u.email + '</td>' +
+            '<td style="color:#00e676">' + Number(u.ksgp).toFixed(6) + '</td>' +
+            '<td>' + u.currentLevel + '</td>' +
+            '<td>' + u.highestLevel + '</td>' +
+            '<td>' + u.totalScore + '</td>' +
+            '<td>' + u.gamesPlayed + '</td>' +
+            '<td>' + (u.hasSavedGame ? '✅' : '—') + '</td>' +
+            '<td>' + (u.lastPlayed ? new Date(u.lastPlayed).toLocaleString() : '—') + '</td>' +
+            '<td>' + (u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—') + '</td>';
+          tbody.appendChild(tr);
+        });
+        document.getElementById('table-wrap').classList.remove('hidden');
+      } catch (e) {
+        document.getElementById('admin-status').textContent = 'Error loading data';
+      }
+    }
+    loadAdmin();
+  </script>
+</body>
+</html>
