@@ -20,7 +20,10 @@ const TRANSLATIONS = {
     continue_saved: "Continue saved game", lang_label: "Language:",
     hazard_warning: "⚠ Ice falling from above!",
     control_hint: "Tap or click inside the game area to change direction",
-    rights: "All rights reserved by KSGP token"
+    rights: "All rights reserved by KSGP token",
+    choose_game: "Choose a game",
+    control_hint_snake: "Snake: tap/click in the play area to steer",
+    control_hint_breakout: "Breakout: click left/right side to move the paddle (5 clicks to an edge)"
   },
   fa: {
     title: "اسنک", subtitle: "بازی مار کلاسیک با امتیاز توکن ksgp",
@@ -181,11 +184,17 @@ function showGameScreen() {
 }
 
 function updateStartUI() {
-  const startBtn = document.getElementById('start-btn');
+  const snakeBtn = document.getElementById('btn-snake');
+  const breakBtn = document.getElementById('btn-breakout');
   const contBtn = document.getElementById('continue-saved-btn');
-  if (!startBtn) return;
-  startBtn.textContent = t('start');
-  startBtn.onclick = () => startLevel(user.currentLevel || 1);
+  if (snakeBtn) {
+    snakeBtn.onclick = () => startLevel(user.currentLevel || 1);
+  }
+  if (breakBtn) {
+    breakBtn.onclick = () => {
+      if (typeof beginBreakout === 'function') beginBreakout(user.currentLevel || 1, null);
+    };
+  }
   if (user.hasSavedGame && contBtn) {
     contBtn.classList.remove('hidden');
     contBtn.textContent = t('continue_saved');
@@ -200,7 +209,12 @@ async function resumeSavedGame() {
     const res = await fetch('/api/game/saved', { credentials: 'include' });
     const data = await res.json();
     if (!data.savedGame) return;
-    beginPlay(data.savedGame.level, data.savedGame);
+    const sg = data.savedGame;
+    if (sg.gameType === 'breakout' && typeof beginBreakout === 'function') {
+      beginBreakout(sg.level, sg);
+    } else {
+      beginPlay(sg.level, sg);
+    }
   } catch (e) { console.error(e); }
 }
 
@@ -241,6 +255,7 @@ class SnakeGame {
   constructor(config, levelNum, savedState = null) {
     this.config = config;
     this.levelNum = levelNum;
+    this.gameType = 'snake';
     this.canvas = document.getElementById('game-canvas');
     this.ctx = this.canvas.getContext('2d');
     this.gridSize = config.grid;
@@ -501,10 +516,16 @@ document.getElementById('save-btn').onclick = async () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({
-        level: game.levelNum, score: game.score, snake: game.snake, dir: game.dir,
-        food: game.food, obstacles: game.obstacles, hazards: game.hazards
-      })
+      body: JSON.stringify(
+        (game.gameType === 'breakout' && typeof game.getSaveState === 'function')
+          ? game.getSaveState()
+          : {
+              gameType: 'snake',
+              level: game.levelNum, score: game.score, snake: game.snake, dir: game.dir,
+              food: game.food, obstacles: game.obstacles, hazards: game.hazards || [],
+              savedAt: new Date().toISOString()
+            }
+      )
     });
     const data = await res.json();
     if (data.success) {
