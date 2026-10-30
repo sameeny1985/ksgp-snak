@@ -707,6 +707,25 @@ function showGameScreen() {
 }
 
 function updateStartUI() {
+  // Force site branding (fixes old cached index.html)
+  document.title = 'KSGP GAMES';
+  const loginH1 = document.querySelector('#login-screen h1');
+  if (loginH1) loginH1.innerHTML = '<span class="token">KSGP</span> <span style="color:#fff">GAMES</span>';
+
+  const menuCard = document.querySelector('#menu-area .card');
+  // Ensure Jackpot button exists even if HTML is outdated
+  if (menuCard && !document.getElementById('btn-jackpot')) {
+    const jp = document.createElement('button');
+    jp.id = 'btn-jackpot';
+    jp.type = 'button';
+    jp.className = 'btn';
+    jp.textContent = 'Jackpot';
+    jp.style.cssText = 'width:100%;margin-top:10px;background:linear-gradient(135deg,#ffd700,#ff6f00);color:#1a0a2e;font-weight:800;';
+    const mob = document.getElementById('btn-mobcontrol');
+    if (mob && mob.parentNode) mob.parentNode.insertBefore(jp, mob.nextSibling);
+    else menuCard.appendChild(jp);
+  }
+
   const snakeBtn = document.getElementById('btn-snake');
   const breakBtn = document.getElementById('btn-breakout');
   const contBtn = document.getElementById('continue-saved-btn');
@@ -728,6 +747,7 @@ function updateStartUI() {
   if (jpBtn) {
     jpBtn.onclick = () => {
       if (typeof openJackpot === 'function') openJackpot();
+      else alert('Jackpot script not loaded. Upload public/jackpot.js');
     };
   }
   if (user.hasSavedGame && contBtn) {
