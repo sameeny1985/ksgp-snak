@@ -1,220 +1,59 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Panel | Snake KSGP</title>
+  <title>My Panel — KSGP GAMES</title>
   <link rel="stylesheet" href="/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin: 20px 0;
-    }
-    .stat-card {
-      background: rgba(255,255,255,0.06);
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .stat-card .value {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: #00e676;
-      margin-top: 6px;
-    }
-    .stat-card .label {
-      font-size: 0.85rem;
-      opacity: 0.8;
-    }
-    .actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    .save-info {
-      background: rgba(0,230,118,0.1);
-      border-radius: 12px;
-      padding: 14px;
-      margin: 16px 0;
-      font-size: 0.95rem;
-      line-height: 1.5;
-    }
-    .save-info strong { color: #00e676; }
-  </style>
 </head>
 <body>
-  <div id="app" style="max-width: 520px;">
-    <div class="lang-bar">
-      <label for="lang-select">Language:</label>
-      <select id="lang-select">
-        <option value="en">English</option>
-        <option value="fa">فارسی</option>
-        <option value="nl">Nederlands</option>
-        <option value="fr">Français</option>
-        <option value="de">Deutsch</option>
-      </select>
+  <div id="app" style="max-width:640px;margin:0 auto;padding:16px;">
+    <header style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h1 style="font-size:1.3rem;"><span class="token">KSGP</span> GAMES</h1>
+      <a href="/" class="btn small">← Games</a>
+    </header>
+    <div class="card">
+      <h2>Token wallet</h2>
+      <p style="font-size:1.6rem;font-weight:700;color:#00e676;">
+        <span id="u-ksgp">0</span> <span class="token">ksgp</span>
+      </p>
+      <p>Stage: <strong id="u-level">1</strong> · Games played: <strong id="u-games">0</strong></p>
+      <p id="u-name" style="opacity:0.8;"></p>
     </div>
-
-    <div class="card" style="margin-top: 8px;">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
-        <img id="user-pic" src="" alt="" class="avatar" style="width:64px;height:64px;">
-        <div>
-          <h2 id="user-name" style="margin:0;">—</h2>
-          <p id="user-email" style="margin:4px 0 0;opacity:0.7;font-size:0.9rem;"></p>
-        </div>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="label" data-i18n="balance">Balance</div>
-          <div class="value"><span id="ksgp">0.000000</span> <span class="token">ksgp</span></div>
-        </div>
-        <div class="stat-card">
-          <div class="label" data-i18n="current_level">Current Stage</div>
-          <div class="value" id="current-level">1</div>
-        </div>
-        <div class="stat-card">
-          <div class="label" data-i18n="highest_level">Highest Stage</div>
-          <div class="value" id="highest-level">1</div>
-        </div>
-        <div class="stat-card">
-          <div class="label" data-i18n="total_score">Total Score</div>
-          <div class="value" id="total-score">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label" data-i18n="games_played">Games Played</div>
-          <div class="value" id="games-played">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="label" data-i18n="last_played">Last Played</div>
-          <div class="value" id="last-played" style="font-size:0.95rem;">—</div>
-        </div>
-      </div>
-
-      <div id="saved-box" class="save-info hidden">
-        <div data-i18n="has_save">You have a saved game!</div>
-        <div style="margin-top:6px;">
-          <span data-i18n="level">Level:</span> <strong id="save-level">—</strong> |
-          <span data-i18n="score">Score:</span> <strong id="save-score">—</strong>
-        </div>
-        <div style="margin-top:4px;font-size:0.85rem;opacity:0.8;" id="save-date"></div>
-      </div>
-
-      <div class="actions">
-        <a href="/" class="btn" id="btn-continue" data-i18n="continue_game">Continue / Play</a>
-        <button id="btn-clear-save" class="btn secondary hidden" data-i18n="clear_save">Clear saved game</button>
-        <a href="/auth/logout" class="btn secondary" data-i18n="logout">Logout</a>
-      </div>
+    <div class="card" style="margin-top:14px;">
+      <h2>Activity report</h2>
+      <p style="opacity:0.75;font-size:0.85rem;">Your token changes (stages, jackpot, login…)</p>
+      <div id="u-history" style="max-height:420px;overflow:auto;font-size:0.82rem;"></div>
     </div>
   </div>
-
+  <footer class="site-footer"><span>All rights reserved by KSGP token</span></footer>
   <script>
-    const TRANSLATIONS = {
-      en: {
-        balance: "Balance", current_level: "Current Stage", highest_level: "Highest Stage",
-        total_score: "Total Score", games_played: "Games Played", last_played: "Last Played",
-        has_save: "You have a saved game!", level: "Level:", score: "Score:",
-        continue_game: "Continue / Play", clear_save: "Clear saved game", logout: "Logout"
-      },
-      fa: {
-        balance: "موجودی", current_level: "سطح فعلی", highest_level: "بالاترین سطح",
-        total_score: "مجموع امتیاز", games_played: "تعداد بازی", last_played: "آخرین بازی",
-        has_save: "یک بازی ذخیره‌شده دارید!", level: "مرحله:", score: "امتیاز:",
-        continue_game: "ادامه / بازی", clear_save: "پاک کردن ذخیره", logout: "خروج"
-      },
-      nl: {
-        balance: "Saldo", current_level: "Huidig niveau", highest_level: "Hoogste niveau",
-        total_score: "Totale score", games_played: "Gespeelde games", last_played: "Laatst gespeeld",
-        has_save: "Je hebt een opgeslagen spel!", level: "Niveau:", score: "Score:",
-        continue_game: "Doorgaan / Spelen", clear_save: "Opgeslagen spel wissen", logout: "Uitloggen"
-      },
-      fr: {
-        balance: "Solde", current_level: "Niveau actuel", highest_level: "Niveau max",
-        total_score: "Score total", games_played: "Parties jouées", last_played: "Dernière partie",
-        has_save: "Vous avez une partie sauvegardée !", level: "Niveau :", score: "Score :",
-        continue_game: "Continuer / Jouer", clear_save: "Effacer la sauvegarde", logout: "Déconnexion"
-      },
-      de: {
-        balance: "Guthaben", current_level: "Aktuelles Level", highest_level: "Höchstes Level",
-        total_score: "Gesamtpunkte", games_played: "Gespielte Spiele", last_played: "Zuletzt gespielt",
-        has_save: "Du hast ein gespeichertes Spiel!", level: "Level:", score: "Punkte:",
-        continue_game: "Weiter / Spielen", clear_save: "Speicher löschen", logout: "Abmelden"
-      }
-    };
-
-    let currentLang = localStorage.getItem('snake_ksgp_lang') || 'en';
-
-    function t(key) {
-      return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || TRANSLATIONS.en[key] || key;
-    }
-
-    function applyLang() {
-      document.documentElement.lang = currentLang;
-      document.documentElement.dir = currentLang === 'fa' ? 'rtl' : 'ltr';
-      document.body.style.fontFamily = currentLang === 'fa' ? "'Vazirmatn', Tahoma, sans-serif" : "'Inter', system-ui, sans-serif";
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        el.textContent = t(el.getAttribute('data-i18n'));
-      });
-    }
-
-    document.getElementById('lang-select').value = currentLang;
-    document.getElementById('lang-select').addEventListener('change', e => {
-      currentLang = e.target.value;
-      localStorage.setItem('snake_ksgp_lang', currentLang);
-      applyLang();
-    });
-
     async function load() {
-      try {
-        const res = await fetch('/api/me', { credentials: 'include' });
-        const data = await res.json();
-        if (!data.authenticated) {
-          location.href = '/';
-          return;
-        }
-        const u = data.user;
-        document.getElementById('user-name').textContent = u.name;
-        document.getElementById('user-email').textContent = u.email;
-        document.getElementById('user-pic').src = u.picture || 'https://via.placeholder.com/64';
-        document.getElementById('ksgp').textContent = u.ksgp.toFixed(6);
-        document.getElementById('current-level').textContent = u.currentLevel;
-        document.getElementById('highest-level').textContent = u.highestLevel;
-        document.getElementById('total-score').textContent = u.totalScore;
-        document.getElementById('games-played').textContent = u.gamesPlayed;
-        document.getElementById('last-played').textContent = u.lastPlayed
-          ? new Date(u.lastPlayed).toLocaleString()
-          : '—';
-
-        if (u.hasSavedGame && u.savedGameInfo) {
-          document.getElementById('saved-box').classList.remove('hidden');
-          document.getElementById('save-level').textContent = u.savedGameInfo.level;
-          document.getElementById('save-score').textContent = u.savedGameInfo.score;
-          document.getElementById('save-date').textContent = new Date(u.savedGameInfo.savedAt).toLocaleString();
-          document.getElementById('btn-clear-save').classList.remove('hidden');
-        }
-        applyLang();
-      } catch (e) {
-        location.href = '/';
+      const me = await fetch('/api/me', { credentials: 'include' }).then(r => r.json());
+      if (!me.authenticated) { location.href = '/'; return; }
+      document.getElementById('u-ksgp').textContent = Number(me.user.ksgp).toLocaleString();
+      document.getElementById('u-level').textContent = me.user.currentLevel;
+      document.getElementById('u-games').textContent = me.user.gamesPlayed;
+      document.getElementById('u-name').textContent = me.user.name + ' · ' + me.user.email;
+      const h = await fetch('/api/me/history', { credentials: 'include' }).then(r => r.json());
+      const box = document.getElementById('u-history');
+      if (!h.history || !h.history.length) {
+        box.innerHTML = '<p style="opacity:0.6;">No activity yet.</p>';
+        return;
       }
+      box.innerHTML = h.history.map(row => {
+        const amt = Number(row.amount) || 0;
+        const sign = amt > 0 ? '+' : '';
+        const col = amt > 0 ? '#69f0ae' : (amt < 0 ? '#ff8a80' : '#aaa');
+        const t = new Date(row.created_at).toLocaleString();
+        return `<div style="border-bottom:1px solid rgba(255,255,255,0.08);padding:8px 0;">
+          <div><strong>${row.action}</strong> · <span style="color:${col}">${sign}${amt.toLocaleString()} ksgp</span>
+          · bal ${row.balance_after != null ? Number(row.balance_after).toLocaleString() : '—'}</div>
+          <div style="opacity:0.55;font-size:0.75rem;">${t}</div>
+        </div>`;
+      }).join('');
     }
-
-    document.getElementById('btn-clear-save').onclick = async () => {
-      if (!confirm('Clear saved game?')) return;
-      await fetch('/api/game/clear-save', { method: 'POST', credentials: 'include' });
-      location.reload();
-    };
-
-    applyLang();
     load();
   </script>
-
-    <footer class="site-footer">
-      <span>All rights reserved by KSGP token</span>
-    </footer>
 </body>
 </html>
