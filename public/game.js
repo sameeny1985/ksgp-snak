@@ -1,8 +1,8 @@
 // ========== Snake KSGP - 1000 levels, success-only rewards, falling hazards ==========
 
 const TOTAL_LEVELS = 1000;
-const TOTAL_KSGP_REWARD = 100000000; // 100 million total
-const KSGP_PER_LEVEL = 100000; // 100,000 ksgp per successful stage
+const TOTAL_KSGP_REWARD = 10000000; // 10 million total (1000×10000)
+const KSGP_PER_LEVEL = 10000; // 10,000 ksgp per successful stage
 
 const TRANSLATIONS = {
   en: {
@@ -722,6 +722,12 @@ function updateStartUI() {
   if (mobBtn) {
     mobBtn.onclick = () => {
       if (typeof beginMobControl === 'function') beginMobControl(user.currentLevel || 1, null);
+    };
+  }
+  const jpBtn = document.getElementById('btn-jackpot');
+  if (jpBtn) {
+    jpBtn.onclick = () => {
+      if (typeof openJackpot === 'function') openJackpot();
     };
   }
   if (user.hasSavedGame && contBtn) {
