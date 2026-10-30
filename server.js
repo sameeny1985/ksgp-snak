@@ -109,8 +109,35 @@ async function initDb() {
     );
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS IDX_session_expire ON session (expire);`);
-  console.log('Database ready');
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ledger (
+      id BIGSERIAL PRIMARY KEY,
+      user_id UUID,
+      email TEXT,
+      action TEXT NOT NULL,
+      detail JSONB,
+      amount DOUBLE PRECISION DEFAULT 0,
+      balance_after DOUBLE PRECISION,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_ledger_user ON ledger (user_id);`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_ledger_created ON ledger (created_at DESC);`);
+  console.log('Database ready (KSGP GAMES + ledger)');
 }
+
+async function logActivity(userId, email, action, detail, amount, balanceAfter) {
+  try {
+    await pool.query(
+      `INSERT INTO ledger (user_id, email, action, detail, amount, balance_after)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userId || null, email || null, action, JSON.stringify(detail || {}), amount || 0, balanceAfter]
+    );
+  } catch (e) {
+    console.error('ledger write failed', e.message);
+  }
+}
+
 
 function rowToUser(row) {
   if (!row) return null;
@@ -164,6 +191,7 @@ async function getOrCreateUser(profile) {
     );
     user = await findUserById(user.id);
   }
+  await logActivity(user.id, user.email, 'login', { name: user.name }, 0, user.ksgp);
   return user;
 }
 
@@ -310,6 +338,7 @@ app.post('/api/game/save', async (req, res) => {
       savedGame,
       lastPlayed: new Date().toISOString()
     });
+    await logActivity(req.user.id, req.user.email, 'save_game', { level, score, gameType: req.body.gameType || 'unknown' }, 0, req.user.ksgp);
     res.json({ success: true, message: 'Game saved' });
   } catch (e) {
     console.error(e);
@@ -382,7 +411,7 @@ app.post('/api/game/result', async (req, res) => {
   }
 
   const TOTAL_LEVELS = 1000;
-  const KSGP_PER_LEVEL = 100000;
+  const KSGP_PER_LEVEL = 10000; // 10,000 per stage
 
   try {
     const user = await findUserById(req.user.id);
@@ -417,6 +446,10 @@ app.post('/api/game/result', async (req, res) => {
       highestLevel: newHighest
     });
 
+    await logActivity(user.id, user.email, 'level_complete', {
+      level, earned, game: 'stage'
+    }, earned, newKsgp);
+
     res.json({
       success: true,
       ksgp: newKsgp,
@@ -428,6 +461,99 @@ app.post('/api/game/result', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ---------- Jackpot (server-side fair RNG) ----------
+const JACKPOT_SYMBOLS = ['cherry', 'lemon', 'orange', 'plum', 'bell', 'bar', 'seven', 'diamond'];
+const JACKPOT_BETS = [100, 500, 1000, 5000, 10000, 50000];
+
+function jackpotPayout(reels, bet) {
+  const [a, b, c] = reels;
+  // 3 of a kind
+  if (a === b && b === c) {
+    const mult = {
+      cherry: 5, lemon: 8, orange: 10, plum: 12,
+      bell: 20, bar: 40, seven: 80, diamond: 150
+    }[a] || 5;
+    return { win: bet * mult, mult, kind: 'three' };
+  }
+  // 2 of a kind
+  if (a === b || b === c || a === c) {
+    const sym = a === b ? a : (b === c ? b : a);
+    const mult = { cherry: 1.2, lemon: 1.3, orange: 1.5, plum: 1.6, bell: 2, bar: 2.5, seven: 3, diamond: 5 }[sym] || 1.2;
+    return { win: Math.floor(bet * mult), mult, kind: 'two' };
+  }
+  return { win: 0, mult: 0, kind: 'none' };
+}
+
+app.post('/api/jackpot/spin', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Please login' });
+  if (!checkRateLimit(req.user.id, 40, 60000)) {
+    return res.status(429).json({ error: 'Too many spins' });
+  }
+  const bet = Number(req.body.bet);
+  if (!JACKPOT_BETS.includes(bet)) {
+    return res.status(400).json({ error: 'Invalid bet', allowed: JACKPOT_BETS });
+  }
+  try {
+    const user = await findUserById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if ((user.ksgp || 0) < bet) {
+      return res.status(400).json({ error: 'Insufficient ksgp', balance: user.ksgp });
+    }
+    // Fair RNG
+    const reels = [
+      JACKPOT_SYMBOLS[crypto.randomInt(0, JACKPOT_SYMBOLS.length)],
+      JACKPOT_SYMBOLS[crypto.randomInt(0, JACKPOT_SYMBOLS.length)],
+      JACKPOT_SYMBOLS[crypto.randomInt(0, JACKPOT_SYMBOLS.length)]
+    ];
+    const { win, mult, kind } = jackpotPayout(reels, bet);
+    const delta = win - bet;
+    const newBal = (user.ksgp || 0) + delta;
+    await updateUser(user.id, { ksgp: newBal, lastPlayed: new Date().toISOString() });
+    await logActivity(user.id, user.email, win > 0 ? 'jackpot_win' : 'jackpot_lose', {
+      bet, reels, win, mult, kind, delta
+    }, delta, newBal);
+    res.json({
+      success: true,
+      reels,
+      bet,
+      win,
+      mult,
+      kind,
+      delta,
+      ksgp: newBal
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Spin failed' });
+  }
+});
+
+app.get('/api/jackpot/info', (req, res) => {
+  res.json({
+    symbols: JACKPOT_SYMBOLS,
+    bets: JACKPOT_BETS,
+    paytable: {
+      three: { cherry: 5, lemon: 8, orange: 10, plum: 12, bell: 20, bar: 40, seven: 80, diamond: 150 },
+      two: { cherry: 1.2, lemon: 1.3, orange: 1.5, plum: 1.6, bell: 2, bar: 2.5, seven: 3, diamond: 5 }
+    }
+  });
+});
+
+// User activity report
+app.get('/api/me/history', async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: 'Please login' });
+  try {
+    const r = await pool.query(
+      `SELECT id, action, detail, amount, balance_after, created_at
+       FROM ledger WHERE user_id = $1 ORDER BY created_at DESC LIMIT 100`,
+      [req.user.id]
+    );
+    res.json({ history: r.rows });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed' });
   }
 });
 
@@ -468,6 +594,43 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
+// Admin ledger = private "blockchain" of all actions
+app.get('/api/admin/ledger', async (req, res) => {
+  if (!req.user || !req.user.isAdmin) {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+  try {
+    const email = req.query.email || null;
+    const limit = Math.min(500, parseInt(req.query.limit || '200', 10));
+    let r;
+    if (email) {
+      r = await pool.query(
+        `SELECT * FROM ledger WHERE email = $1 ORDER BY created_at DESC LIMIT $2`,
+        [email.toLowerCase(), limit]
+      );
+    } else {
+      r = await pool.query(
+        `SELECT * FROM ledger ORDER BY created_at DESC LIMIT $1`,
+        [limit]
+      );
+    }
+    const actions = r.rows.map(row => ({
+      id: row.id,
+      userId: row.user_id,
+      email: row.email,
+      action: row.action,
+      detail: row.detail,
+      amount: Number(row.amount) || 0,
+      balanceAfter: row.balance_after != null ? Number(row.balance_after) : null,
+      createdAt: row.created_at
+    }));
+    res.json({ chain: actions, count: actions.length });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'DB error' });
+  }
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -475,7 +638,7 @@ app.get('*', (req, res) => {
 initDb()
   .then(() => {
     app.listen(PORT, () => {
-      console.log(`Snake KSGP on port ${PORT}`);
+      console.log(`KSGP GAMES on port ${PORT}`);
       console.log(`Admin: ${ADMIN_EMAIL}`);
       console.log(process.env.DATABASE_URL ? 'Using PostgreSQL (Neon)' : 'WARNING: No DATABASE_URL');
     });
