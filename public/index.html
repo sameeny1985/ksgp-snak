@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Snake KSGP</title>
-  <link rel="stylesheet" href="/style.css" />
+  <title>KSGP GAMES</title>
+  <link rel="stylesheet" href="/style.css?v=3" />
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -32,7 +32,7 @@
 
     <div id="login-screen" class="screen">
       <div class="card login-card">
-        <h1>🐍 <span data-i18n="title">Snake</span> <span class="token">KSGP</span></h1>
+        <h1><span class="token">KSGP</span> <span style="color:#fff">GAMES</span></h1>
 
         <!-- Coin image: put your file at public/ksgp-coin.png -->
         <div class="coin-wrap">
@@ -96,6 +96,7 @@
           <button id="btn-snake" class="btn" style="width:100%;margin-top:10px;">Snake</button>
           <button id="btn-breakout" class="btn" style="width:100%;margin-top:10px;background:#ff9800;">Breakout</button>
           <button id="btn-mobcontrol" class="btn" style="width:100%;margin-top:10px;background:#e53935;">Mob Control</button>
+          <button id="btn-jackpot" class="btn" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#ffd700,#ff6f00);color:#1a0a2e;font-weight:800;">Jackpot</button>
           <button id="continue-saved-btn" class="btn secondary hidden" style="width:100%;margin-top:14px;" data-i18n="continue_saved">Continue saved game</button>
           <p style="opacity:0.65;font-size:0.8rem;margin-top:14px;" data-i18n="control_hint_snake">Snake: tap/click in the play area to steer</p>
           <p style="opacity:0.65;font-size:0.8rem;" data-i18n="control_hint_breakout">Breakout: click left/right side to move the paddle (5 clicks to an edge)</p>
@@ -132,8 +133,9 @@
 <footer class="site-footer">
     <span data-i18n="rights">All rights reserved by KSGP token</span>
   </footer>
-  <script src="/breakout.js"></script>
-  <script src="/mobcontrol.js"></script>
-  <script src="/game.js"></script>
+  <script src="/breakout.js?v=3"></script>
+  <script src="/mobcontrol.js?v=3"></script>
+  <script src="/jackpot.js?v=3"></script>
+  <script src="/game.js?v=3"></script>
 </body>
-</html
+</html>
