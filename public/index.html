@@ -80,11 +80,13 @@
 
       <div id="menu-area">
         <div class="card" style="text-align:center;">
-          <h2 data-i18n="start">Start Game</h2>
+          <h2 data-i18n="choose_game">Choose a game</h2>
           <p style="opacity:0.8;margin:12px 0;" data-i18n="info1">Complete each stage to earn ksgp</p>
-          <p style="opacity:0.7;font-size:0.85rem;margin-bottom:12px;" data-i18n="control_hint">Tap or click inside the game area to change direction</p>
-          <button id="start-btn" class="btn" style="width:100%;margin-top:8px;" data-i18n="start">Start Game</button>
-          <button id="continue-saved-btn" class="btn secondary hidden" style="width:100%;margin-top:10px;" data-i18n="continue_saved">Continue saved game</button>
+          <button id="btn-snake" class="btn" style="width:100%;margin-top:10px;">Snake</button>
+          <button id="btn-breakout" class="btn" style="width:100%;margin-top:10px;background:#ff9800;">Breakout</button>
+          <button id="continue-saved-btn" class="btn secondary hidden" style="width:100%;margin-top:14px;" data-i18n="continue_saved">Continue saved game</button>
+          <p style="opacity:0.65;font-size:0.8rem;margin-top:14px;" data-i18n="control_hint_snake">Snake: tap/click in the play area to steer</p>
+          <p style="opacity:0.65;font-size:0.8rem;" data-i18n="control_hint_breakout">Breakout: click left/right side to move the paddle (5 clicks to an edge)</p>
         </div>
       </div>
 
@@ -117,6 +119,7 @@
 <footer class="site-footer">
     <span data-i18n="rights">All rights reserved by KSGP token</span>
   </footer>
+  <script src="/breakout.js"></script>
   <script src="/game.js"></script>
 </body>
 </html>
