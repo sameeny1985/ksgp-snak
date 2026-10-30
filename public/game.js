@@ -195,6 +195,12 @@ function updateStartUI() {
       if (typeof beginBreakout === 'function') beginBreakout(user.currentLevel || 1, null);
     };
   }
+  const mobBtn = document.getElementById('btn-mobcontrol');
+  if (mobBtn) {
+    mobBtn.onclick = () => {
+      if (typeof beginMobControl === 'function') beginMobControl(user.currentLevel || 1, null);
+    };
+  }
   if (user.hasSavedGame && contBtn) {
     contBtn.classList.remove('hidden');
     contBtn.textContent = t('continue_saved');
@@ -212,6 +218,8 @@ async function resumeSavedGame() {
     const sg = data.savedGame;
     if (sg.gameType === 'breakout' && typeof beginBreakout === 'function') {
       beginBreakout(sg.level, sg);
+    } else if (sg.gameType === 'mobcontrol' && typeof beginMobControl === 'function') {
+      beginMobControl(sg.level, sg);
     } else {
       beginPlay(sg.level, sg);
     }
@@ -517,7 +525,7 @@ document.getElementById('save-btn').onclick = async () => {
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify(
-        (game.gameType === 'breakout' && typeof game.getSaveState === 'function')
+        ((game.gameType === 'breakout' || game.gameType === 'mobcontrol') && typeof game.getSaveState === 'function')
           ? game.getSaveState()
           : {
               gameType: 'snake',
