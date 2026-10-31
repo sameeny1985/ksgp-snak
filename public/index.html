@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>KSGP GAMES</title>
+  <link rel="stylesheet" href="/style.css?v=4" />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <div class="lang-bar">
+      <label for="lang-select" id="lang-label">Language:</label>
+      <select id="lang-select">
+        <option value="en">English</option>
+        <option value="fa">فارسی</option>
+        <option value="ar">العربية</option>
+        <option value="tr">Türkçe</option>
+        <option value="nl">Nederlands</option>
+        <option value="fr">Français</option>
+        <option value="de">Deutsch</option>
+        <option value="es">Español</option>
+        <option value="pt">Português</option>
+        <option value="it">Italiano</option>
+        <option value="ru">Русский</option>
+        <option value="zh">中文</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+    </div>
+
+    <div id="login-screen" class="screen">
+      <div class="card login-card">
+        <h1><span class="token">KSGP</span> <span style="color:#fff">GAMES</span></h1>
+
+        <!-- Coin image: put your file at public/ksgp-coin.png -->
+        <div class="coin-wrap">
+          <img id="ksgp-coin" src="/ksgp-coin.png" alt="KSGP Token" class="coin-img"
+               onerror="this.style.display='none'; document.getElementById('coin-placeholder').style.display='flex';" />
+          <div id="coin-placeholder" class="coin-placeholder" style="display:none;">KSGP</div>
+        </div>
+
+        <div class="promo-box" data-i18n-html="promo">
+          <p><strong>Dear user,</strong></p>
+          <p>By playing this game you receive <strong>KSGP</strong> tokens. KSGP is a cryptocurrency token on the <strong>BSC (BNB Smart Chain)</strong> network, listed and viewable on <strong>BscScan</strong>.</p>
+          <p>If the number of users of this game grows to a level acceptable to Binance exchange, with the support of the community the KSGP token can be listed on global exchanges — including <strong>Binance</strong>, the largest cryptocurrency exchange in the world. By playing, you earn KSGP tokens that are intended to be transferred to your digital wallet. When KSGP is listed, you will be able to sell your tokens.</p>
+          <p>Please share this game with your friends. More users means a faster path toward listing and the chance to convert your KSGP into USD or EUR.</p>
+          <p class="promo-sign">Thank you<br>From the founder of the KSGP token and the manager of this site</p>
+        </div>
+
+        <p class="info" style="margin-top:14px;">
+          <span data-i18n="info1">Complete each stage to earn ksgp</span><br>
+          <span data-i18n="info2">Failed attempts give 0 ksgp</span>
+        </p>
+
+        
+        <div id="captcha-box" class="captcha-box">
+          <p data-i18n="captcha_title" style="font-weight:600;margin-bottom:8px;">Verify you are human</p>
+          <p id="captcha-question" style="margin-bottom:8px;"></p>
+          <div style="display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;">
+            <input type="number" id="captcha-answer" placeholder="?" style="width:80px;padding:8px;border-radius:8px;border:1px solid #555;background:#1a1a2e;color:#fff;text-align:center;" />
+            <button type="button" id="captcha-verify" class="btn secondary" data-i18n="captcha_btn">Verify</button>
+          </div>
+          <p id="captcha-msg" style="margin-top:8px;font-size:0.85rem;min-height:1.2em;"></p>
+        </div>
+
+        <a href="/auth/google" id="google-login-btn" class="btn google-btn" style="pointer-events:none;opacity:0.4;">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <span data-i18n="login_btn">Sign in with Google</span>
+        </a>
+        <p class="note" data-i18n="login_note">Click the button to choose from your Google accounts</p>
+      </div>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+      <header>
+        <div class="user-info">
+          <img id="user-pic" src="" alt="" class="avatar" />
+          <div>
+            <div id="user-name"></div>
+            <div class="ksgp-balance"><span data-i18n="balance">Balance:</span> <span id="ksgp-amount">0</span> <span class="token">ksgp</span></div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <a href="/user.html" class="btn small" data-i18n="my_panel">My Panel</a>
+          <button id="admin-btn" class="btn small hidden" data-i18n="admin">Admin</button>
+          <a href="/auth/logout" class="btn small logout" data-i18n="logout">Logout</a>
+        </div>
+      </header>
+
+      <div id="menu-area">
+        <div class="card" style="text-align:center;">
+          <h2 data-i18n="choose_game">Choose a game</h2>
+          <p style="opacity:0.8;margin:12px 0;" data-i18n="info1">Complete each stage to earn ksgp</p>
+          <button id="btn-snake" class="btn" style="width:100%;margin-top:10px;">Snake</button>
+          <button id="btn-breakout" class="btn" style="width:100%;margin-top:10px;background:#ff9800;">Breakout</button>
+          <button id="btn-mobcontrol" class="btn" style="width:100%;margin-top:10px;background:#e53935;">Mob Control</button>
+          <button id="btn-jackpot" class="btn" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#ffd700,#ff6f00);color:#1a0a2e;font-weight:800;">Jackpot</button>
+          <button id="continue-saved-btn" class="btn secondary hidden" style="width:100%;margin-top:14px;" data-i18n="continue_saved">Continue saved game</button>
+          <p style="opacity:0.65;font-size:0.8rem;margin-top:14px;" data-i18n="control_hint_snake">Snake: tap/click in the play area to steer</p>
+          <p style="opacity:0.65;font-size:0.8rem;" data-i18n="control_hint_breakout">Breakout: click left/right side to move the paddle (5 clicks to an edge)</p>
+          <p style="opacity:0.65;font-size:0.8rem;">Mob Control: click left/right to move squad — collect +gates, shoot enemies & rollers</p>
+        </div>
+      </div>
+
+      <div id="play-area" class="hidden">
+        <div class="hud">
+          <span><span data-i18n="stage">Stage</span>: <strong id="current-stage">1</strong></span>
+          <span><span data-i18n="score">Score this run:</span> <strong id="run-score">0</strong></span>
+          <span><span data-i18n="timer">Time:</span> <strong id="run-timer">60</strong>s</span>
+        </div>
+        <p id="hazard-warn" class="hidden" style="text-align:center;color:#81d4fa;margin:6px 0;font-size:0.9rem;"></p>
+        <p class="control-hint" data-i18n="control_hint">Tap or click inside the game area to change direction</p>
+        <canvas id="game-canvas" width="400" height="400"></canvas>
+        <div class="game-actions">
+          <button id="pause-btn" class="btn" data-i18n="pause">Pause</button>
+          <button id="save-btn" class="btn secondary" data-i18n="save_exit">Save & Exit</button>
+          <button id="stop-btn" class="btn secondary" data-i18n="stop">Stop</button>
+        </div>
+      </div>
+
+      <div id="result-modal" class="modal hidden">
+        <div class="modal-content">
+          <h2 id="result-title">Result</h2>
+          <p id="result-msg"></p>
+          <p><strong id="result-reward"></strong></p>
+          <button id="result-ok" class="btn" data-i18n="ok">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<footer class="site-footer">
+    <span data-i18n="rights">All rights reserved by KSGP token</span>
+  </footer>
+  <script src="/sounds.js?v=4"></script>
+  <script src="/breakout.js?v=4"></script>
+  <script src="/mobcontrol.js?v=4"></script>
+  <script src="/jackpot.js?v=4"></script>
+  <script src="/game.js?v=4"></script>
+</body>
+</html>
